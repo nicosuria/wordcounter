@@ -1,0 +1,30 @@
+= Wordcounter
+
+ActiveRecord plugin for counting words from specific fields and associations.
+
+
+== Setup
+
+  class Article < ActiveRecord::Base
+    wordcounter :fields => [:title, :body]
+  end
+
+=== Usage
+
+  article = Article.new(:title => "zerg rush",  :description =>"zergling zerg rush rush")
+  article.word_count
+  => {'zerg' => 2, 'rush' => 3, 'zergling' => 1}
+  
+Wordcounter also has basic support for association word counting. Use the format:
+  
+  class Article < ActiveRecord::Base
+    wordcounter :fields => [:title, :body],
+    :associations => [
+      :comments => [:body]
+    ]
+  end
+  
+
+=== Credits
+
+Copyright (c) 2010 Nico Suria, released under the MIT license
