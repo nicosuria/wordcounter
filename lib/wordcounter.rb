@@ -49,6 +49,7 @@ module Wordcounter
       YAML::load_file(File.dirname(__FILE__) + '/ignored_words.yml').split
     end
     
+  
     def word_count
       count_hash = {}
       count_hash.default = 0
