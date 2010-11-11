@@ -42,7 +42,7 @@ module Wordcounter
     end
     
     def countable_words
-      (countable_instance_words + countable_association_words) - ignored_words
+      ((countable_instance_words + countable_association_words) - ignored_words).each(&:downcase!)
     end
     
     def ignored_words
@@ -50,17 +50,22 @@ module Wordcounter
     end
     
   
-    def word_count
+    def word_count(options={})
       count_hash = {}
       count_hash.default = 0
-      countable_words.each do |word|
-        count_hash[word.downcase] += 1          
+      if options[:for].nil?      
+        countable_words.collect{|word| count_hash[word.downcase] += 1}
+      else     
+        if options[:for].is_a?(Array)
+          options[:for].collect{|word| count_hash[word.downcase] = countable_words.join(' ').scan(word).size}
+        else
+          count_hash[options[:for]] = countable_words.join(' ').scan(options[:for]).size
+        end
       end
       count_hash
     end
   end
 end
-
 
 ActiveRecord::Base.class_eval do
   include Wordcounter

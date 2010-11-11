@@ -19,9 +19,9 @@ Wordcounter also has basic support for association word counting. Use the format
   
   class Article < ActiveRecord::Base
     wordcounter :fields => [:title, :body],
-    :associations => [
+    :associations => {
       :comments => [:body]
-    ]
+    }
   end
   
 
