@@ -49,20 +49,35 @@ module Wordcounter
       YAML::load_file(File.dirname(__FILE__) + '/ignored_words.yml').split
     end
     
+    def top_words(options={})
+      count_hash = word_count(options)
+      count_hash.sort{|a,b| b[1]<=>a[1]}[0...(options[:limit] || count_hash.size)].collect{|h| h.first}
+    end
+    
   
     def word_count(options={})
       count_hash = {}
       count_hash.default = 0
+      words = options[:words] || countable_words
       if options[:for].nil?      
-        countable_words.collect{|word| count_hash[word.downcase] += 1}
+        words.collect{|word| count_hash[clean(word)] += 1 unless clean(word).blank?}
       else     
         if options[:for].is_a?(Array)
-          options[:for].collect{|word| count_hash[word.downcase] = countable_words.join(' ').scan(word).size}
+          
+          options[:for].collect do |word| 
+            count = words.join(' ').scan(word.downcase).size            
+            count_hash[word.downcase] = count unless count.zero?
+          end
         else
-          count_hash[options[:for]] = countable_words.join(' ').scan(options[:for]).size
+          count_hash[options[:for]] = words.join(' ').scan(options[:for]).size
         end
       end
       count_hash
+    end
+    
+    private
+    def clean(string)
+      string.gsub(/[^[:alnum:]]/, '').downcase 
     end
   end
 end

@@ -39,4 +39,11 @@ class WordcounterTest < Test::Unit::TestCase
      assert_equal word_count["lorem ipsum"], 4
      assert_equal word_count["ipsum ipsum"], 2
    end
+   
+   def test_article_should_return_top_words_with_limit
+      @article = Article.create(:title => "Lorem Ipsum", :body => "lorem ipsum ipsum")
+      @article.comments.create(:title => "Lorem Ipsum", :body=> "lorem ipsum ipsum")      
+      assert_equal @article.top_words(:limit => 1), ["ipsum"]
+      
+    end
 end
