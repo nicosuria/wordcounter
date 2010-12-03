@@ -24,24 +24,40 @@ module Wordcounter
     
   end
   
-  module InstanceMethods
+  module InstanceMethods         
     def countable_instance_words
-      wordcounted_fields.inject([]) do |words, field|
-        words += (self.send(field).nil? ? [] : self.send(field).split)
-      end     
+      instance_words = []
+      wordcounted_fields.each do |field|
+        next if self.send(field).nil?
+        self.send(field).split.each do |w|
+          instance_words << clean(w) unless clean(w).blank?
+        end
+      end    
+      instance_words 
     end
     
     def countable_association_words
-      words = []
+      association_words = []
       wordcounted_associations.each_pair do |association, fields|
         self.send(association).each do |obj|
-          fields.collect{|field| words += (obj.send(field).nil? ? [] : obj.send(field).split)}          
+          fields.each  do |field|
+             next if obj.send(field).nil?
+             obj.send(field).split.each do |w|
+               association_words << clean(w) unless clean(w).blank?
+             end
+           end
         end
       end
-      words
+      association_words
     end
     
-    def countable_words
+    def load_words_to_cache(options={})
+      raise "Please define a method or column called :cached_words to handle wordset storage" unless self.respond_to?("cached_words=")
+      self.cached_words = countable_words
+      save(false) unless options[:save_record].eql?(false)
+    end
+    
+    def countable_words      
       ((countable_instance_words + countable_association_words) - ignored_words).each(&:downcase!)
     end
     
@@ -52,13 +68,14 @@ module Wordcounter
     def top_words(options={})
       count_hash = word_count(options)
       count_hash.sort{|a,b| b[1]<=>a[1]}[0...(options[:limit] || count_hash.size)].collect{|h| h.first}
-    end
-    
+    end    
   
     def word_count(options={})
       count_hash = {}
       count_hash.default = 0
-      words = options[:words] || countable_words
+      
+      words = self.respond_to?(:cached_words) ? cached_words : countable_words
+      
       if options[:for].nil?      
         words.collect{|word| count_hash[clean(word)] += 1 unless clean(word).blank?}
       else     
@@ -74,7 +91,7 @@ module Wordcounter
       end
       count_hash
     end
-    
+      
     private
     def clean(string)
       string.gsub(/[^[:alnum:]]/, '').downcase 

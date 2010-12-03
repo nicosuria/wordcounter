@@ -24,6 +24,16 @@ Wordcounter also has basic support for association word counting. Use the format
     }
   end
   
+=== Caching
+
+In cases where the projected wordset for an object is too big to be effectively processed in memory, you may include a column or define a method in your model called :cached_words to store countable words.
+
+  def cached_words
+   
+  end
+  
+Wordcounter comes with a cache refresh method called :load_words_to_cache that will load countable words into this column.
+  
 
 === Credits
 
