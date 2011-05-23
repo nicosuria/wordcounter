@@ -29,7 +29,8 @@ module Wordcounter
       instance_words = []
       wordcounted_fields.each do |field|
         next if self.send(field).nil?
-        self.send(field).split.each do |w|
+        value = self.send(field).is_a?(Array) ? self.send(field).join(" ") : self.send(field)
+        value.split.each do |w|
           instance_words << clean(w) unless clean(w).blank?
         end
       end    
@@ -66,8 +67,17 @@ module Wordcounter
     end
     
     def top_words(options={})
+      limit = options.delete :limit
       count_hash = word_count(options)
-      count_hash.sort{|a,b| b[1]<=>a[1]}[0...(options[:limit] || count_hash.size)].collect{|h| h.first}
+      
+      reordered_list = count_hash.sort{|a,b| b[1]<=>a[1]}[0...(limit || count_hash.size)]
+      if options[:words_only] == true
+        reordered_list.collect{|l| l.first}
+      else
+        hash = {}
+        reordered_list.collect{|l| hash[l.first] = l.last.to_i}
+        return hash
+      end
     end    
   
     def word_count(options={})
@@ -77,12 +87,12 @@ module Wordcounter
       words = self.respond_to?(:cached_words) ? cached_words : countable_words
       
       if options[:for].nil?      
-        words.collect{|word| count_hash[clean(word)] += 1 unless clean(word).blank?}
+        words.to_a.collect{|word| count_hash[clean(word)] += 1 unless clean(word).blank?}
       else     
         if options[:for].is_a?(Array)
           
           options[:for].collect do |word| 
-            count = words.join(' ').scan(word.downcase).size            
+            count = words.to_a.join(' ').scan(word.downcase).size            
             count_hash[word.downcase] = count unless count.zero?
           end
         else
